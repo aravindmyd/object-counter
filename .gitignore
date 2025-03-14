@@ -2,3 +2,5 @@
 .venv
 spikes
 *.pyc
+.DS_Store
+*.zip

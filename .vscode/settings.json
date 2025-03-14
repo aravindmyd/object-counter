@@ -1,0 +1,22 @@
+{
+"python.defaultInterpreterPath": "/Users/aravindhav/python-envs/object/bin/python",
+    "python.analysis.extraPaths": ["${workspaceFolder}/app"],
+    "python.analysis.typeCheckingMode": "basic",
+    "python.languageServer": "Pylance",
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+    "source.organizeImports": "always"
+},
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true
+    },
+    "debugpy.logLevel": "info",
+    "debugpy.breakOnSystemExitZero": true,
+    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": true
+}
