@@ -1,9 +1,9 @@
 from PIL import Image
 
-from counter.debug import draw
-from counter.domain.models import CountResponse
-from counter.domain.ports import ObjectCountRepo, ObjectDetector
-from counter.domain.predictions import count, over_threshold
+from src.modules.debug import draw
+from src.modules.domain.models import CountResponse
+from src.modules.domain.ports import ObjectCountRepo, ObjectDetector
+from src.modules.domain.predictions import count, over_threshold
 
 
 class CountDetectedObjects:

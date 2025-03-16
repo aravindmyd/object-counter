@@ -1,8 +1,8 @@
 import os
 
-from counter.adapters.count_repo import CountInMemoryRepo, CountMongoDBRepo
-from counter.adapters.object_detector import FakeObjectDetector, TFSObjectDetector
-from counter.domain.actions import CountDetectedObjects
+from src.modules.adapters.count_repo import CountInMemoryRepo, CountMongoDBRepo
+from src.modules.adapters.object_detector import FakeObjectDetector, TFSObjectDetector
+from src.modules.domain.actions import CountDetectedObjects
 
 
 def dev_count_action() -> CountDetectedObjects:
@@ -22,6 +22,6 @@ def prod_count_action() -> CountDetectedObjects:
 
 
 def get_count_action() -> CountDetectedObjects:
-    env = os.environ.get("ENV", "dev")
+    env = os.environ.get("ENV", "prod")
     count_action_fn = f"{env}_count_action"
     return globals()[count_action_fn]()

@@ -2,8 +2,8 @@ from typing import List
 
 from pymongo import MongoClient
 
-from counter.domain.models import ObjectCount
-from counter.domain.ports import ObjectCountRepo
+from src.modules.domain.models import ObjectCount
+from src.modules.domain.ports import ObjectCountRepo
 
 
 class CountInMemoryRepo(ObjectCountRepo):

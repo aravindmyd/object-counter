@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import BinaryIO, List
 
-from counter.domain.models import ObjectCount, Prediction
+from src.modules.domain.models import ObjectCount, Prediction
 
 
 class ObjectDetector(ABC):

@@ -5,11 +5,14 @@ from PIL import ImageDraw, ImageFont
 
 def draw(predictions, image, image_name):
     draw_image = ImageDraw.Draw(image, "RGBA")
-
     image_width, image_height = image.size
 
-    font = ImageFont.truetype("counter/resources/arial.ttf", 20)
-    i = 0
+    # Try to load a default font if a system font is unavailable
+    try:
+        font = ImageFont.truetype("arial.ttf", 20)  # Use system font
+    except IOError:
+        font = ImageFont.load_default()  # Fallback to default PIL font
+
     for prediction in predictions:
         box = prediction.box
         draw_image.rectangle(
@@ -20,18 +23,14 @@ def draw(predictions, image, image_name):
             outline="red",
         )
         class_name = prediction.class_name
+        text_position = (box.xmin * image_width, box.ymin * image_height - 10)
+
         draw_image.text(
-            (
-                box.xmin * image_width,
-                box.ymin * image_height - font.getlength(class_name),
-            ),
-            f"{class_name}: {prediction.score}",
+            text_position,
+            f"{class_name}: {prediction.score:.2f}",
             font=font,
             fill="black",
         )
-        i += 1
-    try:
-        os.mkdir("tmp/debug")
-    except OSError:
-        pass
+
+    os.makedirs("tmp/debug", exist_ok=True)
     image.save(f"tmp/debug/{image_name}", "JPEG")

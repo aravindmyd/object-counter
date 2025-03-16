@@ -1,7 +1,7 @@
 from functools import reduce
 from typing import List
 
-from counter.domain.models import ObjectCount, Prediction
+from src.modules.domain.models import ObjectCount, Prediction
 
 
 def over_threshold(predictions: List[Prediction], threshold: float):

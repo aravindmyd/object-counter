@@ -4,15 +4,13 @@ import logging
 from pathlib import Path
 
 import pytest
-
-from counter.entrypoints.webapp import create_app
+from src.api.app import app
 
 logging.basicConfig(level=logging.INFO)
 
 
 @pytest.fixture
 def client():
-    app = create_app()
     app.config["TESTING"] = True
     with app.test_client() as client:
         yield client

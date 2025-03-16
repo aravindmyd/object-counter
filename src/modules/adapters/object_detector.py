@@ -1,12 +1,13 @@
 import json
+import os
 from typing import BinaryIO, List
 
 import numpy as np
 import requests
 from PIL import Image
 
-from counter.domain.models import Box, Prediction
-from counter.domain.ports import ObjectDetector
+from src.modules.domain.ports import ObjectDetector
+from src.modules.domain.models import Box, Prediction
 
 
 class FakeObjectDetector(ObjectDetector):
@@ -32,12 +33,15 @@ class TFSObjectDetector(ObjectDetector):
         predict_request = '{"instances" : %s}' % np.expand_dims(np_image, 0).tolist()
         print(f"Sending request to TFS...{self.url}")
         response = requests.post(self.url, data=predict_request)
+        print(f"response : {response}")
         predictions = response.json()["predictions"][0]
         return self.__raw_predictions_to_domain(predictions)
 
     @staticmethod
     def __build_classes_dict():
-        with open("counter/adapters/mscoco_label_map.json") as json_file:
+        file_path = os.path.join(os.path.dirname(__file__), "mscoco_label_map.json")
+
+        with open(file_path) as json_file:
             labels = json.load(json_file)
             return {label["id"]: label["display_name"] for label in labels}
 

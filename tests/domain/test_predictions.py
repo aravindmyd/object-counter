@@ -1,5 +1,6 @@
-from counter.domain.models import ObjectCount
-from counter.domain.predictions import count, over_threshold
+from src.modules.domain.models import ObjectCount
+from src.modules.domain.predictions import count, over_threshold
+
 from tests.domain.helpers import generate_prediction
 
 
