@@ -1,4 +1,4 @@
-from counter.domain.models import Box, Prediction
+from src.modules.domain.models import Box, Prediction
 
 
 def generate_prediction(class_name, score=1.0):
