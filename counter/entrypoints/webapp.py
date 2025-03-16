@@ -1,30 +1,20 @@
 from io import BytesIO
 
-from flask import Flask, jsonify, request
+import uvicorn
+from fastapi import FastAPI, File, Form, UploadFile
 
 from counter import config
 
+app = FastAPI()
+count_action = config.get_count_action()
 
-def create_app():
 
-    app = Flask(__name__)
-
-    count_action = config.get_count_action()
-
-    @app.route("/object-count", methods=["POST"])
-    def object_detection():
-
-        threshold = float(request.form.get("threshold", 0.5))
-        uploaded_file = request.files["file"]
-        # model_name = request.form.get("model_name", "rfcn")
-        image = BytesIO()
-        uploaded_file.save(image)
-        count_response = count_action.execute(image, threshold)
-        return jsonify(count_response)
-
-    return app
+@app.post("/object-count")
+async def object_detection(file: UploadFile = File(...), threshold: float = Form(0.5)):
+    image = BytesIO(await file.read())
+    count_response = count_action.execute(image, threshold)
+    return count_response
 
 
 if __name__ == "__main__":
-    app = create_app()
-    app.run("0.0.0.0", debug=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

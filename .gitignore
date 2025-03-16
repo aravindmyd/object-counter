@@ -4,3 +4,5 @@ spikes
 *.pyc
 .DS_Store
 *.zip
+*.egg-info
+*.pb
