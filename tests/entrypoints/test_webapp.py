@@ -32,7 +32,7 @@ def test_object_detection(client, image_path):
 
     data = {
         "threshold": "0.9",
-        "model_name": "rfcn",
+        "model_name": "resnet",
     }
     data["file"] = (image, "test.jpg")
 
