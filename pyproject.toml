@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "object-counter"
+version = "0.1.0"
+description = "Object Counter is a Python package that counts the number of objects in an image."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy==2.2.3",
+    "pillow==11.1.0",
+    "requests==2.32.3",
+    "pymongo==4.11.2",
+    "flask==3.1.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "black==25.1.0",
+    "pytest==8.3.5"
+]
+
+[tool.setuptools]
+packages = ["counter"]
