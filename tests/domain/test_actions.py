@@ -1,9 +1,9 @@
 from unittest.mock import Mock
 
 import pytest
+
 from src.modules.domain.actions import CountDetectedObjects
 from src.modules.domain.models import ObjectCount
-
 from tests.domain.helpers import generate_prediction
 
 

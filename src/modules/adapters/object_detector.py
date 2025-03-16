@@ -6,8 +6,8 @@ import numpy as np
 import requests
 from PIL import Image
 
-from src.modules.domain.ports import ObjectDetector
 from src.modules.domain.models import Box, Prediction
+from src.modules.domain.ports import ObjectDetector
 
 
 class FakeObjectDetector(ObjectDetector):

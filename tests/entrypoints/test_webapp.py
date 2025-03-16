@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 
 import pytest
+
 from src.api.app import app
 
 logging.basicConfig(level=logging.INFO)
