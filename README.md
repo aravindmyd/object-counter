@@ -12,13 +12,35 @@ The application is composed by 3 layers:
 
 - **domain**: This layer is responsible for the business logic. It is responsible for orchestrating the calls to the external services and for applying the business rules.
 
-The model used in this example has been taken from 
+The model used in this example has been taken from
 [IntelAI](https://github.com/IntelAI/models/blob/master/docs/object_detection/tensorflow_serving/Tutorial.md)
 
-
 ## Instructions to configure this project
+
+## Using Docker Compose (Recommended)
+
+The easiest way to run the application is using Docker Compose:
+
+```bash
+# Build and start all services
+
+docker-compose up
 ```
-# Download the rfcn model 
+
+This will:
+
+- Download and set up the ResNet model
+- Start TensorFlow Serving with the model
+- Start MongoDB
+- Run the application tests
+
+## Manual Setup
+
+If you prefer to set up each component manually, follow these steps:
+
+### Download the rfcn model
+
+```
 wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/rfcn_resnet101_fp32_coco_pretrained_model.tar.gz
 tar -xzvf rfcn_resnet101_fp32_coco_pretrained_model.tar.gz -C tmp
 rm rfcn_resnet101_fp32_coco_pretrained_model.tar.gz
@@ -28,7 +50,7 @@ mv tmp/rfcn_resnet101_coco_2018_01_28/saved_model/saved_model.pb tmp/model/rfcn/
 rm -rf tmp/rfcn_resnet101_coco_2018_01_28
 ```
 
-## Setup and run Tensorflow Serving
+### Setup and run Tensorflow Serving
 
 ```
 
@@ -66,16 +88,14 @@ docker run `
     --model_config_file=/models/model_config.config
 ```
 
-
-## Run mongo 
+### Run mongo
 
 ```bash
 docker rm -f test-mongo
 docker run --name test-mongo --rm -p 27017:27017 -d mongo:latest
 ```
 
-
-## Setup virtualenv
+### Setup virtualenv
 
 ```bash
 # Python >= 3.0
@@ -84,9 +104,10 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Run the application
+### Run the application
 
 ### Using fakes
+
 ```
 python -m counter.entrypoints.webapp
 ```
@@ -107,7 +128,7 @@ python -m counter.entrypoints.webapp
 ```shell script
  curl -F "threshold=0.9" -F "file=@resources/images/boy.jpg" http://0.0.0.0:5000/object-count
  curl -F "threshold=0.9" -F "file=@resources/images/cat.jpg" http://0.0.0.0:5000/object-count
- curl -F "threshold=0.9" -F "file=@resources/images/food.jpg" http://0.0.0.0:5000/object-count 
+ curl -F "threshold=0.9" -F "file=@resources/images/food.jpg" http://0.0.0.0:5000/object-count
 ```
 
 ## Run the tests

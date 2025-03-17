@@ -1,0 +1,84 @@
+services:
+  # Step 1: Create a temporary volume for model data
+  model-setup:
+    image: ubuntu:latest
+    volumes:
+      - model-data:/models
+    command: |
+      bash -c '
+        # Install required tools
+        apt-get update && apt-get install -y wget tar
+        
+        # Create directories
+        mkdir -p /models/resnet/1
+        
+        # Download the model
+        cd /tmp
+        wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/rfcn_resnet101_fp32_coco_pretrained_model.tar.gz
+        
+        # Extract model
+        tar -xzvf rfcn_resnet101_fp32_coco_pretrained_model.tar.gz
+        
+        # Check if the directory exists
+        if [ -d "rfcn_resnet101_coco_2018_01_28/saved_model" ]; then
+          # Copy the saved model to the correct directory
+          cp -R rfcn_resnet101_coco_2018_01_28/saved_model/* /models/resnet/1/
+          echo "Copied saved model files to /models/resnet/1/"
+          echo "Model setup complete."
+        else
+          echo "Error: saved_model directory not found in expected location!"
+          exit 1
+        fi
+      '
+
+  # Step 2: TensorFlow Serving
+  tfserving:
+    image: emacski/tensorflow-serving:latest
+    platform: linux/arm64
+    container_name: tfserving
+    ports:
+      - "8500:8500"
+      - "8501:8501"
+    volumes:
+      - model-data:/models
+    environment:
+      - OMP_NUM_THREADS=4
+      - TENSORFLOW_INTER_OP_PARALLELISM=2
+      - TENSORFLOW_INTRA_OP_PARALLELISM=4
+    command: |
+      --model_base_path=/models/resnet
+      --model_name=resnet
+    depends_on:
+      model-setup:
+        condition: service_completed_successfully
+
+  # Step 3: MongoDB
+  mongodb:
+    image: mongo:latest
+    container_name: test-mongo
+    ports:
+      - "27017:27017"
+    depends_on:
+      tfserving:
+        condition: service_started
+
+  # Step 4: Run Tests
+  tests:
+    image: python:3.12
+    volumes:
+      - ./:/app
+    working_dir: /app
+    environment:
+      - MONGO_HOST=mongodb
+      - TFS_HOST=tfserving
+    command: |  
+      bash -c '
+        pip install -e .[dev]
+        pytest
+      '
+    depends_on:
+      mongodb:
+        condition: service_started
+
+volumes:
+  model-data:
