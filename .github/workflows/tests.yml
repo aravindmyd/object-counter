@@ -25,7 +25,14 @@ jobs:
       - name: Wait for services to be ready
         run: |
           echo "Waiting for MongoDB and TensorFlow Serving to be ready..."
-          sleep 30
+
+          # Wait for TensorFlow Serving
+          timeout 140s bash -c 'until curl -s http://localhost:8501/v1/models/resnet; do echo "Waiting for TensorFlow Serving..."; sleep 2; done'
+          echo "TensorFlow Serving is ready"
+
+          # Wait for MongoDB
+          timeout 60s bash -c 'until curl -s http://localhost:27017 > /dev/null; do echo "Waiting for MongoDB..."; sleep 2; done'
+          echo "MongoDB is ready"
 
       - name: Run tests
         run: docker compose run --rm tests
