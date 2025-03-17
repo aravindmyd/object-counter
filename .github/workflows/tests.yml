@@ -27,7 +27,7 @@ jobs:
           echo "Waiting for MongoDB and TensorFlow Serving to be ready..."
 
           # Wait for TensorFlow Serving
-          timeout 140s bash -c 'until curl -s http://localhost:8501/v1/models/resnet; do echo "Waiting for TensorFlow Serving..."; sleep 2; done'
+          timeout 140s bash -c 'until curl -s http://tfserving:8501/v1/models/resnet; do echo "Waiting for TensorFlow Serving..."; sleep 2; done'
           echo "TensorFlow Serving is ready"
 
           # Wait for MongoDB
