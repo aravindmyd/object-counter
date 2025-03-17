@@ -1,5 +1,4 @@
 name: Run Unit and Integration Tests
-
 on:
   push:
     branches:
@@ -7,11 +6,9 @@ on:
   pull_request:
     branches:
       - main
-
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,20 +19,78 @@ jobs:
       - name: Start services
         run: docker compose up -d
 
+      - name: Check container status
+        run: |
+          docker ps -a
+          echo "----- Container logs for tfserving -----"
+          docker logs tfserving
+          echo "----- Container logs for model-setup -----"
+          docker logs $(docker ps -aqf "name=*model-setup*")
+          echo "----- Network information -----"
+          docker network ls
+          docker network inspect $(docker network ls -qf "name=*_default")
+
       - name: Wait for services to be ready
         run: |
-          echo "Waiting for MongoDB and TensorFlow Serving to be ready..."
+          echo "Waiting for TensorFlow models to be available..."
+          # Check if models are properly loaded in TensorFlow Serving
+          docker exec tfserving bash -c "ls -la /models/resnet/1/ || echo 'Model directory not found or empty'"
 
-          # Wait for TensorFlow Serving
-          timeout 140s bash -c 'until curl -s http://tfserving:8501/v1/models/resnet; do echo "Waiting for TensorFlow Serving..."; sleep 2; done'
-          echo "TensorFlow Serving is ready"
+          # Try the health check from inside the container
+          echo "Testing TensorFlow Serving API from inside container:"
+          docker exec tfserving curl -v --max-time 10 http://localhost:8501/v1/models/resnet || echo "Failed to connect from inside container"
+
+          # Try from host with more verbose output
+          echo "Testing TensorFlow Serving API from host:"
+          curl -v --max-time 10 http://localhost:8501/v1/models/resnet || echo "Failed to connect from host"
 
           # Wait for MongoDB
-          timeout 60s bash -c 'until curl -s http://localhost:27017 > /dev/null; do echo "Waiting for MongoDB..."; sleep 2; done'
-          echo "MongoDB is ready"
+          echo "Waiting for MongoDB..."
+          timeout 30s bash -c 'until curl -s http://localhost:27017 > /dev/null; do echo "Waiting for MongoDB..."; sleep 2; done' || echo "MongoDB connection timed out"
 
       - name: Run tests
-        run: docker compose run --rm tests
+        run: docker compose run --rm tests || (docker ps -a && exit 1)
 
       - name: Stop and remove services
         run: docker compose down
+# name: Run Unit and Integration Tests
+
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     branches:
+#       - main
+
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+
+#       - name: Set up Docker Compose
+#         run: docker compose version
+
+#       - name: Start services
+#         run: docker compose up -d
+
+#       - name: Wait for services to be ready
+#         run: |
+#           echo "Waiting for MongoDB and TensorFlow Serving to be ready..."
+
+#           # Wait for TensorFlow Serving
+#           timeout 140s bash -c 'until curl -s http://tfserving:8501/v1/models/resnet; do echo "Waiting for TensorFlow Serving..."; sleep 5; done'
+#           echo "TensorFlow Serving is ready"
+
+#           # Wait for MongoDB
+#           timeout 60s bash -c 'until curl -s http://localhost:27017 > /dev/null; do echo "Waiting for MongoDB..."; sleep 2; done'
+#           echo "MongoDB is ready"
+
+#       - name: Run tests
+#         run: docker compose run --rm tests
+
+#       - name: Stop and remove services
+#         run: docker compose down
