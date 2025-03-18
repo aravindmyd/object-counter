@@ -33,8 +33,8 @@ services:
 
   # Step 2: TensorFlow Serving
   tfserving:
-    image: emacski/tensorflow-serving:latest
-    platform: linux/arm64
+    image: ${TF_IMAGE:-emacski/tensorflow-serving:latest}
+    platform: ${TF_PLATFORM:-linux/arm64}
     container_name: tfserving
     ports:
       - "8500:8500"

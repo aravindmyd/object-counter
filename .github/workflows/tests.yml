@@ -19,16 +19,19 @@ jobs:
       - name: Set up Docker Compose
         run: docker compose version
 
-      - name: Start services
-        run: docker compose up -d
-
-      - name: Wait for services to be ready
+      - name: Start services and run tests
         run: |
-          echo "Waiting for MongoDB and TensorFlow Serving to be ready..."
-          sleep 30
+          if [[ "$(uname -m)" == "arm64" ]]; then
+            echo "TF_IMAGE=emacski/tensorflow-serving:latest" >> $GITHUB_ENV
+            echo "TF_PLATFORM=linux/arm64" >> $GITHUB_ENV
+            echo "Using ARM64 TensorFlow image"
+          else
+            echo "TF_IMAGE=tensorflow/serving:latest" >> $GITHUB_ENV
+            echo "TF_PLATFORM=linux/amd64" >> $GITHUB_ENV
+            echo "Using AMD64 TensorFlow image"
+          fi
 
-      - name: Run tests
-        run: docker compose run --rm tests
+          docker compose up -d
 
       - name: Stop and remove services
         run: docker compose down
