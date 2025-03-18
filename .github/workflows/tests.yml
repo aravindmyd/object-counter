@@ -1,5 +1,4 @@
 name: Run Unit and Integration Tests
-
 on:
   push:
     branches:
@@ -11,7 +10,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,7 +17,7 @@ jobs:
       - name: Set up Docker Compose
         run: docker compose version
 
-      - name: Start services and run tests
+      - name: Start services
         run: |
           if [[ "$(uname -m)" == "arm64" ]]; then
             echo "TF_IMAGE=emacski/tensorflow-serving:latest" >> $GITHUB_ENV
@@ -33,5 +31,75 @@ jobs:
 
           docker compose up -d
 
-      - name: Stop and remove services
-        run: docker compose down
+      - name: Wait for Tests to Complete
+        run: |
+          TEST_CONTAINER_ID=$(docker ps -q -f name=tests)
+          if [ -z "$TEST_CONTAINER_ID" ]; then
+            echo "Error: Test container not found!"
+            exit 1
+          fi
+          docker wait "$TEST_CONTAINER_ID"
+
+      - name: Show Test Logs
+        if: always()
+        run: |
+          echo "Fetching logs from test container..."
+          TEST_CONTAINER_ID=$(docker ps -aq -f name=tests)
+          if [ -z "$TEST_CONTAINER_ID" ]; then
+            echo "Error: Test container not found!"
+            exit 1
+          fi
+          docker logs "$TEST_CONTAINER_ID" | tee test_output.log
+
+      - name: Stop and Remove Services
+        if: always()
+        run: docker compose down --volumes
+# name: Run Unit and Integration Tests
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     branches:
+#       - main
+
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+
+#       - name: Set up Docker Compose
+#         run: docker compose version
+
+#       - name: Start services
+#         run: |
+#           if [[ "$(uname -m)" == "arm64" ]]; then
+#             echo "TF_IMAGE=emacski/tensorflow-serving:latest" >> $GITHUB_ENV
+#             echo "TF_PLATFORM=linux/arm64" >> $GITHUB_ENV
+#             echo "Using ARM64 TensorFlow image"
+#           else
+#             echo "TF_IMAGE=tensorflow/serving:latest" >> $GITHUB_ENV
+#             echo "TF_PLATFORM=linux/amd64" >> $GITHUB_ENV
+#             echo "Using AMD64 TensorFlow image"
+#           fi
+
+#           docker compose up -d
+
+#       - name: Wait for Tests to Complete
+#         run: |
+#           TEST_CONTAINER_ID=$(docker ps -q -f name=tests)
+#           if [ -z "$TEST_CONTAINER_ID" ]; then
+#             echo "Error: Test container not found!"
+#             exit 1
+#           fi
+#           docker wait "$TEST_CONTAINER_ID"
+
+#       - name: Show Test Logs
+#         if: always()
+#         run: docker logs $(docker ps -aq -f name=tests)
+
+#       - name: Stop and Remove Services
+#         if: always()
+#         run: docker compose down --volumes
