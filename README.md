@@ -210,7 +210,3 @@ E2E_TESTS=1 API_BASE_URL=http://localhost:8000 pytest tests/e2e/
 
 In pyproject.toml, we can enable this variable as well
 ```
-
-## Model Information
-
-The object detection model used in this example is from IntelAI. The system architecture allows for easy addition of different detection model backends through the plugin pattern.
