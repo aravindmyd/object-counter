@@ -44,14 +44,14 @@ class DatabaseMixin:
         self.db = db
 
     def query_existing(self, entity: Union[BaseModel, Type]):
-        return self.db.query(entity).filter(entity.expired_at == None)
+        return self.db.query(entity).filter(entity.expired_at.is_(None))
 
     def get_by_id(self, entity: Union[BaseModel, Type], entity_id: int):
         try:
             return (
                 self.db.query(entity)
                 .filter(entity.id == entity_id)
-                .filter(entity.expired_at == None)
+                .filter(entity.expired_at.is_(None))
                 .one()
             )
         except NoResultFound:

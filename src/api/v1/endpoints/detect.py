@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from pydantic import confloat, conlist, constr
+from pydantic import confloat, constr
 
 from src.api.v1.schemas.detect import DetectionResponse
 from src.modules.detection.services import DetectionService
