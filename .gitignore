@@ -6,3 +6,5 @@ spikes
 *.zip
 *.egg-info
 *.pb
+*.tar.gz
+*.jpg
