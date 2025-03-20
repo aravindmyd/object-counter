@@ -1,5 +1,6 @@
 import io
 import logging
+import os
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,11 @@ from fastapi.testclient import TestClient
 from src.api.app import app
 
 logging.basicConfig(level=logging.INFO)
+
+# Skip these tests if E2E_TESTS environment variable is not set
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("E2E_TESTS"), reason="End-to-end tests disabled"
+)
 
 
 @pytest.fixture

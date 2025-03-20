@@ -12,8 +12,8 @@ class Settings(BaseSettings):
     db_password: str = "new-password"
     db_name: str = "object"
 
-    # disk storage settings
-    base_documents_path: Path = Path("./documents/")
+    # upload storage settings
+    upload_dir: Path = Path("/tmp/uploads")
 
     # model name
     model_name: str = "resnet"

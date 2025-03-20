@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 from typing import BinaryIO, List
 
 import numpy as np
@@ -39,7 +40,17 @@ class TFSObjectDetector(ObjectDetector):
 
     @staticmethod
     def __build_classes_dict():
-        file_path = os.path.join(os.path.dirname(__file__), "mscoco_label_map.json")
+
+        file_path = (
+            Path(__file__).resolve().parent.parent.parent.parent
+            / "resources"
+            / "model-files"
+            / "mscoco_label_map.json"
+        )
+
+        file_path = os.path.normpath(
+            file_path
+        )  # Normalize path for cross-platform compatibility
 
         with open(file_path) as json_file:
             labels = json.load(json_file)

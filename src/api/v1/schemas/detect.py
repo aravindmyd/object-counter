@@ -4,7 +4,9 @@ from pydantic import BaseModel
 
 
 class DetectionResponse(BaseModel):
-    results: List[Dict[str, float | list]]
+    """API response model for object detection"""
+
+    results: List[Dict]
     counts: Dict[str, int]
     total_count: int
     threshold_applied: float

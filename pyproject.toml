@@ -9,28 +9,44 @@ description = "Object Counter is a Python package that counts the number of obje
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "numpy==2.2.3",
-    "pillow==11.1.0",
-    "requests==2.32.3",
-    "pymongo==4.11.2",
-    "fastapi==0.115.11",
-    "python-multipart==0.0.20",
-    "uvicorn==0.34.0"
+    "numpy>=2.2.3,<2.3",
+    "pillow>=11.1.0,<12",
+    "requests>=2.32.3,<2.33",
+    "pymongo>=4.11.2,<5",
+    "fastapi>=0.115.11,<0.116",
+    "python-multipart>=0.0.20,<0.1",
+    "pymysql>=1.1.0,<2",
+    "uvicorn>=0.34.0,<0.35"
 ]
 
 [project.optional-dependencies]
 dev = [
-    "black==25.1.0",
-    "pytest==8.3.5",
-    "flake8==7.0.0",
-    "isort==5.13.2",
-    "httpx==0.28.1"
+    "black>=25.1.0,<26",
+    "pytest>=8.3.5,<9",
+    "flake8>=7.0.0,<8",
+    "isort>=5.13.2,<6",
+    "httpx>=0.28.1,<0.29"
 ]
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 
 [tool.isort]
 profile = "black"
 multi_line_output = 3
 line_length = 88
+
+
+[tool.pytest.ini_options]
+addopts = "--strict-markers"
+testpaths = ["tests"]
+log_cli = true                
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+[tool.pytest_env]
+# E2E_TESTS = "1"
+# API_BASE_URL = "http://localhost:8000"
+# RUN_DB_TESTS = "1"
+# TEST_DATABASE_URL = "mysql+pymysql://user:pass@localhost/test_db"
