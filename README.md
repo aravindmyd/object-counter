@@ -1,138 +1,216 @@
-# NIQ Innovation Enablement - Challenge 1 (Object Counting)
+# Object Detection API
 
-The goal of this repo is demonstrate how to apply Hexagonal Architecture in a ML based system.
+This repository provides a robust object detection service that processes images, identifies objects with their confidence scores, and stores the results in a structured format.
 
-This application consists in a Fast API that receives an image and a threshold and returns the number of objects detected in the image.
+## Architecture Overview
 
-The application is composed by 3 layers:
+The application follows a layered architecture with a plugin-based approach for extensibility:
 
-- **entrypoints**: This layer is responsible for exposing the API and receiving the requests. It is also responsible for validating the requests and returning the responses.
+- **API Layer**: FastAPI endpoints that receive requests and return responses
+- **Service Layer**: Core business logic orchestrating the detection process
+- **Repository Layer**: Data persistence with MySQL
+- **Detector Layer**: Pluggable object detection backends (TensorFlow Serving, etc.)
 
-- **adapters**: This layer is responsible for the communication with the external services. It is responsible for translating the domain objects to the external services objects and vice-versa.
+## Key Features
 
-- **domain**: This layer is responsible for the business logic. It is responsible for orchestrating the calls to the external services and for applying the business rules.
+- **Plugin Architecture**: Support for multiple object detection model backends
+- **Relational Database Storage**: Persistence of detection results with MySQL
+- **Clean API Design**: Well-structured REST API following best practices
+- **Comprehensive Testing**: Unit, integration, and end-to-end tests
 
-The model used in this example has been taken from
-[IntelAI](https://github.com/IntelAI/models/blob/master/docs/object_detection/tensorflow_serving/Tutorial.md)
+## Tech Stack
 
-## Instructions to configure this project
+- **FastAPI**: Web framework for building APIs
+- **SQLAlchemy**: ORM for database interactions
+- **TensorFlow Serving**: Serving the detection model
+- **MySQL**: Relational database for persistence
+- **Docker**: Containerization for easy deployment
+- **pytest**: Testing framework
 
-## Using Docker Compose (Recommended)
+## API Endpoints
 
-The easiest way to run the application is using Docker Compose:
+The API exposes the following endpoints:
+
+### `POST /api/v1/detect`
+Process an image and return detected objects
+
+- Accepts multipart form with image file and threshold parameter
+- Returns detected objects, counts by class, and metadata
+
+### `GET /api/v1/models`
+List available detection models
+
+- Returns information about configured models and their parameters
+
+## Setup and Installation
+
+Setting up the application is straightforward using Docker Compose:
 
 ```bash
-# Build and start all services
-
-docker-compose up
+docker-compose up -d
 ```
 
 This will:
 
-- Download and set up the ResNet model
-- Start TensorFlow Serving with the model
-- Start MongoDB
-- Run the application tests
+- Download the object detection model
+- Set up MongoDB
+- Set up MySQL (for object detection results storage)
+- Set up TensorFlow Serving with the detection model
+- Run tests to verify functionality
+- Expose the API on port 8000
 
-## Manual Setup
+## Usage Examples
 
-If you prefer to set up each component manually, follow these steps:
-
-### Download the rfcn model
-
-```
-wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/rfcn_resnet101_fp32_coco_pretrained_model.tar.gz
-tar -xzvf rfcn_resnet101_fp32_coco_pretrained_model.tar.gz -C tmp
-rm rfcn_resnet101_fp32_coco_pretrained_model.tar.gz
-chmod -R 777 tmp/rfcn_resnet101_coco_2018_01_28
-mkdir -p tmp/model/rfcn/1
-mv tmp/rfcn_resnet101_coco_2018_01_28/saved_model/saved_model.pb tmp/model/rfcn/1
-rm -rf tmp/rfcn_resnet101_coco_2018_01_28
-```
-
-### Setup and run Tensorflow Serving
-
-```
-
-# For unix systems
-cores_per_socket=`lscpu | grep "Core(s) per socket" | cut -d':' -f2 | xargs`
-num_sockets=`lscpu | grep "Socket(s)" | cut -d':' -f2 | xargs`
-num_physical_cores=$((cores_per_socket * num_sockets))
-
-docker rm -f tfserving
-docker run \
-    --name=tfserving \
-    -p 8500:8500 \
-    -p 8501:8501 \
-    -v "$(pwd)\tmp\model:/models" \
-    -e OMP_NUM_THREADS=$num_physical_cores \
-    -e TENSORFLOW_INTER_OP_PARALLELISM=2 \
-    -e TENSORFLOW_INTRA_OP_PARALLELISM=$num_physical_cores \
-    intel/intel-optimized-tensorflow-serving:2.8.0 \
-    --model_config_file=/models/model_config.config
-
-# For Windows (Powershell)
-$num_physical_cores=(Get-WmiObject Win32_Processor | Select-Object NumberOfCores).NumberOfCores
-echo $num_physical_cores
-
-docker rm -f tfserving
-docker run `
-    --name=tfserving `
-    -p 8500:8500 `
-    -p 8501:8501 `
-    -v "$pwd\tmp\model:/models" `
-    -e OMP_NUM_THREADS=$num_physical_cores `
-    -e TENSORFLOW_INTER_OP_PARALLELISM=2 `
-    -e TENSORFLOW_INTRA_OP_PARALLELISM=$num_physical_cores `
-    intel/intel-optimized-tensorflow-serving:2.8.0 `
-    --model_config_file=/models/model_config.config
-```
-
-### Run mongo
+### Detecting Objects in an Image
 
 ```bash
-docker rm -f test-mongo
-docker run --name test-mongo --rm -p 27017:27017 -d mongo:latest
+curl -X 'POST' \
+  'http://127.0.0.1:8000/api/v1/detect/' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: multipart/form-data' \
+  -F 'image=@your-file-name.jpg;type=image/jpeg' \
+  -F 'threshold=0.5' \
+  -F 'model_id=default'
 ```
 
-### Setup virtualenv
+### Listing Available Models
 
 ```bash
-# Python >= 3.0
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+curl -X 'GET' \
+  'http://127.0.0.1:8000/api/v1/models' \
+  -H 'accept: application/json'
+```
+# Adding and Switching Models
+
+The application uses a plugin architecture that makes it easy to add new detection models and switch between them.
+
+## Adding a New Model
+
+### Create a new detector implementation
+
+Create a new class that extends the `BaseObjectDetector` interface:
+
+```python
+# src/modules/detector/your_model.py
+from src.modules.detector.base import BaseObjectDetector, Box, DetectionConfig, Prediction
+
+class YourModelConfig(DetectionConfig):
+    # Add model-specific configuration parameters
+    custom_param: str
+    
+class YourModelDetector(BaseObjectDetector):
+    def __init__(self, config: YourModelConfig):
+        super().__init__(config)
+        # Initialize your model
+        
+    def predict(self, image):
+        # Implement prediction logic
+        # Return a list of Prediction objects
+        
+    def get_supported_classes(self):
+        # Return list of class names your model can detect
+        
+    def get_model_info(self):
+        # Return model metadata
 ```
 
-### Run the application
+### Register your detector with the factory
 
-### Using fakes
+Add your detector to the factory in `src/modules/detector/factory.py`:
 
-```
-python -m counter.entrypoints.webapp
-```
+```python
+# Import your detector
+from src.modules.detector.your_model import YourModelConfig, YourModelDetector
 
-### Using real services in docker containers
-
-```
-# Unix
-ENV=prod python -m counter.entrypoints.webapp
-
-# Powershell
-$env:ENV = "prod"
-python -m counter.entrypoints.webapp
+# Register in the factory
+DetectorFactory.register_detector(
+    "your-model-type",
+    YourModelDetector,
+    YourModelConfig
+)
 ```
 
-## Call the service
+### Add configuration for your model
 
-```shell script
- curl -F "threshold=0.9" -F "file=@resources/images/boy.jpg" http://0.0.0.0:5000/object-count
- curl -F "threshold=0.9" -F "file=@resources/images/cat.jpg" http://0.0.0.0:5000/object-count
- curl -F "threshold=0.9" -F "file=@resources/images/food.jpg" http://0.0.0.0:5000/object-count
+Add your model configuration to the detector dependency:
+
+```python
+# In src/api/v1/endpoints/detect.py or your config file
+detector_configs["your-model-id"] = {
+    "type": "your-model-type",
+    "config": {
+        "model_id": "your-model-id",
+        "confidence_threshold": 0.5,
+        "custom_param": "custom-value",
+        # Add other model-specific parameters
+    }
+}
 ```
 
-## Run the tests
+## Switching Models
+
+When making API requests, you can specify which model to use via the `model_id` parameter:
+
+```bash
+# Use the default model
+curl -X POST "http://localhost:8000/api/v1/detect" \
+  -F "image=@your_image.jpg" \
+  -F "threshold=0.5"
+
+# Use a specific model
+curl -X POST "http://localhost:8000/api/v1/detect" \
+  -F "image=@your_image.jpg" \
+  -F "threshold=0.5" \
+  -F "model_id=your-model-id"
+```
+
+The application will automatically use the appropriate detector implementation based on the `model_id` parameter.
+
+
+
+## Development
+
+### Project Structure
 
 ```
-pytest
+├── src/
+│   ├── api/
+│   │   └── v1/
+│   │       └── endpoints/       # API endpoints
+│   ├── modules/
+│   │   ├── detection/
+│   │   │   ├── models/          # Database models
+│   │   │   └── services/        # Service layer components
+│   │   ├── adps/
+│   │   │   └── mysql_object.py  # MySQL repository implementation
+│   │   └── detector/
+│   │       ├── base.py          # Object detector interface
+│   │       └── factory.py       # Detector factory pattern
+│   └── common/                  # Shared utilities
+├── tests/
+│   ├── unit/                    # Unit tests
+│   ├── integration/             # Integration tests
+│   └── e2e/                     # End-to-end tests
+└── docker-compose.yml
 ```
+
+## Testing
+
+The project includes a comprehensive test suite:
+
+```bash
+# Run unit tests
+pytest tests/unit
+
+# Run integration tests
+pytest tests/integration/
+
+# Run end-to-end tests (requires running API)
+E2E_TESTS=1 API_BASE_URL=http://localhost:8000 pytest tests/e2e/
+
+In pyproject.toml, we can enable this variable as well
+```
+
+## Model Information
+
+The object detection model used in this example is from IntelAI. The system architecture allows for easy addition of different detection model backends through the plugin pattern.

@@ -13,11 +13,50 @@ logger = get_api_logger()
 router = APIRouter()
 
 
-@router.post("/", response_model=DetectionResponse)
+@router.post(
+    "/",
+    response_model=DetectionResponse,
+    summary="Detect Objects",
+    description="Analyzes an image and returns detected objects with their bounding boxes, classes, and confidence scores.",
+    response_description="List of detected objects with their properties",
+    responses={
+        200: {
+            "description": "Successful detection",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "objects": [
+                            {
+                                "class_name": "person",
+                                "confidence": 0.92,
+                                "bbox": [10, 20, 100, 200],
+                            },
+                            {
+                                "class_name": "car",
+                                "confidence": 0.88,
+                                "bbox": [150, 100, 400, 300],
+                            },
+                        ],
+                        "count": 2,
+                        "processing_time": 0.153,
+                    }
+                }
+            },
+        },
+        400: {
+            "description": "Invalid input",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Invalid image format or missing image data"}
+                }
+            },
+        },
+    },  # We can add up more responses
+)
 async def detect_objects(
     image: UploadFile = File(...),
-    threshold: float = Form(..., ge=0.0, le=1.0),
-    model_id: Optional[constr(min_length=1)] = Form(None),
+    threshold: float = Form(0.5, ge=0.0, le=1.0),
+    model_id: Optional[constr(min_length=1)] = Form("default"),
     detection_service: DetectionService = Depends(),
     detector_dependency: DetectorDependency = Depends(),
 ):
@@ -27,7 +66,7 @@ async def detect_objects(
     Args:
         image: The image file to analyze
         threshold: Confidence threshold (0.0-1.0)
-        model_id: Optional model identifier
+        model_id: Optional model identifier ( We can get the list of available models from /models endpoint)
 
     Returns:
         DetectionResponse with results, counts, and metadata

@@ -1,10 +1,12 @@
 import json
+import os
 from pathlib import Path
 from typing import BinaryIO, Dict, List, Optional
 
 import numpy as np
 import requests
 from PIL import Image
+from pydantic import Field
 
 from .base import BaseObjectDetector, Box, DetectionConfig, Prediction
 
@@ -12,10 +14,13 @@ from .base import BaseObjectDetector, Box, DetectionConfig, Prediction
 class TFSConfig(DetectionConfig):
     """Configuration for TensorFlow Serving detector"""
 
-    host: str
-    port: int
+    host: str = Field(default_factory=lambda: os.environ.get("TFS_HOST", "localhost"))
+    port: int = Field(default_factory=lambda: int(os.environ.get("TFS_PORT", "8501")))
     model_name: str
     label_map_path: Optional[str] = None
+
+    class Config:
+        extra = "allow"
 
 
 class TFSObjectDetector(BaseObjectDetector):
@@ -26,8 +31,9 @@ class TFSObjectDetector(BaseObjectDetector):
     def __init__(self, config: TFSConfig):
         super().__init__(config)
         self.config = config
-        self.host = config.host
-        self.port = config.port
+        # Override host and port from environment variables if available
+        self.host = os.environ.get("TFS_HOST", config.host)
+        self.port = os.environ.get("TFS_PORT", str(config.port))
         self.model_name = config.model_name
         self.url = f"http://{self.host}:{self.port}/v1/models/{self.model_name}:predict"
         self.classes_dict = self._build_classes_dict(config.label_map_path)

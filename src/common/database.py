@@ -16,10 +16,6 @@ def get_database_url():
     db_user = settings.db_user
     db_password = settings.db_password
     db_name = settings.db_name
-    print(
-        "url :",
-        {f"{db_driver}://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"},
-    )
     return f"{db_driver}://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 
