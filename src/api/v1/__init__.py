@@ -1,2 +1,2 @@
-from schemas import * 
-from endpoints import * 
+from .endpoints import *
+from .schemas import *
